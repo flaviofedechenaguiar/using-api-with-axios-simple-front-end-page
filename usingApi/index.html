@@ -1,13 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consumo API</title>
 </head>
+
 <body>
-    
+    <hr>
+    <h4>Lista de Games</h4>
+    <ul id="games"></ul>
+    <hr>
+    <h4>Novo game</h4>
+    <input type="text" name="title" id="title" placeholder="Título"><br>
+    <input type="number" name="year" id="year" placeholder="Ano"><br>
+    <input type="number" name="price" id="price" placeholder="Preço"><br>
+    <button onclick="createGame()" type="button">Criar</button>
+    <h4>Edição de Game</h4>
+    <input type="text" name="idEdit" id="idEdit" readonly><br>
+    <input type="text" name="titleEdit" id="titleEdit" placeholder="Título"><br>
+    <input type="number" name="yearEdit" id="yearEdit" placeholder="Ano"><br>
+    <input type="number" name="priceEdit" id="priceEdit" placeholder="Preço"><br>
+    <button onclick="updateGame()" type="button">Editar</button>
 </body>
+<script src="./axios.js"></script>
+<script>
+
+    function createGame() {
+        let titleInput = document.getElementById('title');
+        let yearInput = document.getElementById('year');
+        let priceInput = document.getElementById('price');
+
+        let game = {
+            title: titleInput.value,
+            year: yearInput.value,
+            price: priceInput.value
+        }
+
+        axios.post('http://localhost:3030/game', game)
+            .then(response => {
+                if (response.status == 200) {
+                    listGames();
+                    alert('Game Created');
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });;
+
+
+    }
+
+    function deleteGame(listItem) {
+        let id = listItem.getAttribute('data-id');
+        axios.delete(`http://localhost:3030/game/${id}`)
+            .then((response) => {
+                if (response.status == 200) {
+                    listGames();
+                    alert('Game Deleted');
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    }
+
+    function loadForm(listItem) {
+        let id = listItem.getAttribute('data-id');
+        let title = listItem.getAttribute('data-title');
+        let year = listItem.getAttribute('data-year');
+        let price = listItem.getAttribute('data-price');
+        document.getElementById('idEdit').value = id;
+        document.getElementById('titleEdit').value = title;
+        document.getElementById('yearEdit').value = year;
+        document.getElementById('priceEdit').value = price;
+    }
+
+    function updateGame(){
+        let idInput = document.getElementById('idEdit');
+        let titleInput = document.getElementById('titleEdit');
+        let yearInput = document.getElementById('yearEdit');
+        let priceInput = document.getElementById('priceEdit');
+
+        let game = {
+            title: titleInput.value,
+            year: yearInput.value,
+            price: priceInput.value
+        }
+
+        let id = idInput.value;
+
+        axios.put(`http://localhost:3030/game/${id}`, game)
+            .then(response => {
+                if (response.status == 200) {
+                    listGames();
+                    alert('Game Updated');
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });;
+
+
+    }
+
+    function listGames() {
+        axios.get('http://localhost:3030/games')
+            .then(response => {
+                let games = response.data;
+                var list = document.getElementById('games');
+                let items = list.querySelectorAll('li');
+                items.forEach(item => {
+                    list.removeChild(item);
+                });
+                games.forEach(game => {
+                    let item = document.createElement('li');
+                    item.innerHTML = `${game.id} - ${game.title} - Lançado de ${game.year} - R$ ${game.price}`;
+
+                    item.setAttribute('data-id', game.id);
+                    item.setAttribute('data-title', game.title);
+                    item.setAttribute('data-year', game.year);
+                    item.setAttribute('data-price', game.price);
+
+                    let deleteButton = document.createElement('button');
+                    deleteButton.innerHTML = 'Deletar';
+                    deleteButton.addEventListener('click', function () {
+                        deleteGame(item);
+                    });
+
+                    item.appendChild(deleteButton);
+
+                    let editButton = document.createElement('button');
+                    editButton.innerHTML = 'Editar';
+                    editButton.addEventListener('click', function () {
+                        loadForm(item);
+                    })
+
+                    item.appendChild(editButton);
+
+
+                    list.appendChild(item)
+                });
+
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+    listGames();
+
+</script>
 
 </html>
